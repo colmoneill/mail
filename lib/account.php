@@ -17,10 +17,13 @@ use Horde_Imap_Client;
 use Horde_Mail_Transport_Smtphorde;
 use OCA\Mail\Cache\Cache;
 use OCA\Mail\Db\MailAccount;
+use OCA\Mail\Service\IAccount;
+use OCA\Mail\Service\IMailBox;
 use OCP\IConfig;
 use OCP\ICacheFactory;
+use OCP\Security\ICrypto;
 
-class Account {
+class Account implements IAccount {
 
 	/**
 	 * @var MailAccount
@@ -295,6 +298,15 @@ class Account {
 		return $draftsFolder[0];
 	}
 
+
+	/**
+	 * @return IMailBox
+	 */
+	public function getInbox() {
+		$folders =  $this->getSpecialFolder('inbox', false);
+		return count($folders) > 0 ? $folders[0] : null;
+	}
+
 	/**
 	 * Get the "sent mail" mailbox
 	 *
@@ -522,15 +534,15 @@ class Account {
 	/**
 	 * Convert special security mode values into Horde parameters
 	 *
-	 * @param string $sslmode
+	 * @param string $sslMode
 	 * @return false|string
 	 */
-	protected function convertSslMode($sslmode) {
-		switch ($sslmode) {
+	protected function convertSslMode($sslMode) {
+		switch ($sslMode) {
 			case 'none':
 				return false;
 		}
-		return $sslmode;
+		return $sslMode;
 	}
 
 	/**
@@ -592,6 +604,20 @@ class Account {
 			$this->client = null;
 		}
 		$this->getImapConnection();
+	}
+
+	/**
+	 * @return array
+	 */
+	public function getConfiguration() {
+		return $this->account->toJson();
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getEmail() {
+		return $this->account->getEmail();
 	}
 }
 
