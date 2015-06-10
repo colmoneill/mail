@@ -1,4 +1,4 @@
-/* global Handlebars, Marionette, Notification, relative_modified_date, formatDate, humanFileSize, views, OC, _ */
+/* global Handlebars, Marionette, Notification, relative_modified_date, formatDate, humanFileSize, views, OC, _, md5 */
 
 if (_.isUndefined(OC.Notification.showTemporary)) {
 
@@ -49,7 +49,7 @@ var Mail = {
 		
 		Object.defineProperties(this, {
 			accounts: {
-				get: function() { 
+				get: function() {
 					return accounts;
 				},
 				set: function(acc) {
@@ -123,7 +123,7 @@ var Mail = {
 			var storage = $.localStorage;
 			_.each(storage.get('messages'), function(account, accountId) {
 				var isActive = _.any(activeAccounts, function(a) {
-					return a === parseInt(accountId);
+					return a === parseInt(accountId, 10);
 				});
 				if (!isActive) {
 					// Account does not exist anymore -> remove it
@@ -469,8 +469,15 @@ var Mail = {
 				return humanFileSize(size);
 			});
 
-			Handlebars.registerHelper("printAddressList", function(addressList) {
-				var currentAddress = _.find(Mail.State.accounts, function(item) {
+			Handlebars.registerHelper('accountColor', function (account) {
+				var hash = md5(account),
+					maxRange = parseInt('ffffffffffffffffffffffffffffffff', 16),
+					hue = parseInt(hash, 16) / maxRange * 256;
+				return new Handlebars.SafeString('hsl(' + hue + ', 90%, 65%)');
+			});
+
+			Handlebars.registerHelper("printAddressList", function (addressList) {
+				var currentAddress = _.find(Mail.State.accounts, function (item) {
 					return item.accountId === Mail.State.currentAccountId;
 				});
 
@@ -1010,7 +1017,7 @@ var Mail = {
 							Mail.Cache.addMessage(Mail.State.currentAccountId,
 								Mail.State.currentFolderId,
 								message);
-								loadMessageSuccess(message);
+							loadMessageSuccess(message);
 						}
 					},
 					onError: function(jqXHR, textStatus) {
